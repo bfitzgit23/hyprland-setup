@@ -59,16 +59,26 @@ protonvpn-toggle.sh            # connect if down, disconnect if up
 protonvpn-toggle.sh status     # "on <iface>" or "off"
 ```
 
-Packaging caveat on this machine: `guru`'s Proton set is internally inconsistent
-(app 4.17.1 + api-core 4.19.1 — the app imports `proton.vpn.core.vpnconnector`,
-which 4.19 dropped; app 4.19.1 + api-core 5.8.11 then need
-`proton.vpn.platform`, which no installed package ships). Local overlay copies
-of `net-vpn/proton-vpn-gtk-app-4.19.1` and `dev-python/proton-vpn-api-core-5.8.11`
-are in `dell/var/db/repos/bennji-overlay/`; the GUI will start working once
-`proton-vpn-network-manager` is bumped to the release that carries
-`proton.vpn.platform`. Until then the tunnel is driven through NetworkManager:
-import a Proton WireGuard/OpenVPN config (`nmcli connection import type openvpn
-file x.ovpn`) and the chip + toggle pick it up.
+Packaging note (the GUI would not start out of the box):
+
+1. `guru` pairs app 4.17.1 with api-core 4.19.1, but 4.17.1 imports
+   `proton.vpn.core.vpnconnector`, which 4.19 dropped.
+2. App 4.19.1 then needs `FREE_RESCOPE_FLAG`, which only api-core 5.8.x exports.
+3. api-core is a **mixed Rust/Python** project: it declares
+   `package_data={'proton.vpn': ['platform.abi3.so']}` and the plain
+   python-only ebuild never built the crate, so `import proton.vpn.platform`
+   failed. It is not shipped by `proton-vpn-network-manager`.
+
+Fixed by local overlay ebuilds (`dell/var/db/repos/bennji-overlay/`):
+`net-vpn/proton-vpn-gtk-app-4.19.1` and `dev-python/proton-vpn-api-core-5.8.11`,
+the latter building crate `proton-vpn-platform` with
+`--features python,core,telemetry,local_agent` and installing
+`proton/vpn/platform.abi3.so` with `newins` in `python_install_all`. The crate's
+`dependencies/protun` submodule is missing from the tarball (its git URL 404s),
+so the ebuild generates a stub path dependency; the `protun`/`sdk` features stay
+off. Verified: `protonvpn-app` opens its sign-in window (class
+`proton.vpn.app.gtk`), with `gnome-keyring`'s secret service started at login
+from `hyprland.lua` — the app refuses to run without it.
 
 Credentials live in `~/.config/protonvpn/credentials` and are **gitignored**
 (`*credentials*`, `protonvpn/`) — the repo ships the scripts, never the account.

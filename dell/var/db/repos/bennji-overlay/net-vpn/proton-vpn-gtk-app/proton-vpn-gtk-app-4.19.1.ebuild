@@ -26,18 +26,24 @@ RESTRICT="test"
 
 RDEPEND="
 	$(python_gen_cond_dep '
+		dev-python/dbus-fast[${PYTHON_USEDEP}]
 		dev-python/dbus-python[${PYTHON_USEDEP}]
+		dev-python/fido2[${PYTHON_USEDEP}]
+		dev-python/pynacl[${PYTHON_USEDEP}]
+		dev-python/sentry-sdk[${PYTHON_USEDEP}]
 		dev-python/distro[${PYTHON_USEDEP}]
 		dev-python/packaging[${PYTHON_USEDEP}]
 		dev-python/proton-core[${PYTHON_USEDEP}]
 		dev-python/proton-keyring-linux[${PYTHON_USEDEP}]
-		>=dev-python/proton-vpn-api-core-4.19.1[${PYTHON_USEDEP}]
+		>=dev-python/proton-vpn-api-core-5.8.11[${PYTHON_USEDEP}]
 		dev-python/proton-vpn-local-agent[${PYTHON_USEDEP}]
 		dev-python/proton-vpn-network-manager[${PYTHON_USEDEP}]
 		dev-python/pycairo[${PYTHON_USEDEP}]
 		dev-python/pygobject[${PYTHON_USEDEP}]
 		dev-python/requests[${PYTHON_USEDEP}]
 	')
+	app-crypt/libsecret
+	gnome-base/gnome-keyring
 "
 
 src_install() {

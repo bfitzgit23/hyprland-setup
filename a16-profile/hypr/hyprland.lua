@@ -138,6 +138,9 @@ hl.on("hyprland.start", function()
     -- PA protocol, and without this daemon they see no input device at all.
     hl.exec_cmd("pipewire -c pipewire-pulse.conf")
     hl.exec_cmd("wireplumber")
+    -- Secret service for the Proton VPN app (and anything else using keyring):
+    -- the app stores its session token there and refuses to start without it.
+    hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
     hl.exec_cmd("nm-applet --indicator")
     hl.exec_cmd("blueman-applet")
     hl.exec_cmd("~/.local/bin/wallpaper-rotate.sh")
