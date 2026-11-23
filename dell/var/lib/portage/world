@@ -127,6 +127,7 @@ net-vpn/networkmanager-openvpn
 net-vpn/networkmanager-pptp
 net-vpn/openfortivpn
 net-vpn/openvpn
+net-vpn/proton-vpn-gtk-app
 net-vpn/tor
 net-wireless/b43-fwcutter
 net-wireless/blueman

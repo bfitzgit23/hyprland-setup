@@ -49,6 +49,35 @@ only the files that differ into `~/.config/{hypr,quickshell}` and `~/.local/bin`
 then `hyprctl reload` + restarts quickshell. Emerge runs under `sudo`, so the
 system part needs a terminal — the bar opens `kitty` for it.
 
+**`protonvpn-enable.sh` / `protonvpn-toggle.sh`** — Proton VPN:
+
+```sh
+protonvpn-enable.sh            # prompt for email + password, store them (0600)
+protonvpn-enable.sh --show     # report what is stored, never the secret
+protonvpn-enable.sh --forget   # delete the stored account
+protonvpn-toggle.sh            # connect if down, disconnect if up
+protonvpn-toggle.sh status     # "on <iface>" or "off"
+```
+
+Packaging caveat on this machine: `guru`'s Proton set is internally inconsistent
+(app 4.17.1 + api-core 4.19.1 — the app imports `proton.vpn.core.vpnconnector`,
+which 4.19 dropped; app 4.19.1 + api-core 5.8.11 then need
+`proton.vpn.platform`, which no installed package ships). Local overlay copies
+of `net-vpn/proton-vpn-gtk-app-4.19.1` and `dev-python/proton-vpn-api-core-5.8.11`
+are in `dell/var/db/repos/bennji-overlay/`; the GUI will start working once
+`proton-vpn-network-manager` is bumped to the release that carries
+`proton.vpn.platform`. Until then the tunnel is driven through NetworkManager:
+import a Proton WireGuard/OpenVPN config (`nmcli connection import type openvpn
+file x.ovpn`) and the chip + toggle pick it up.
+
+Credentials live in `~/.config/protonvpn/credentials` and are **gitignored**
+(`*credentials*`, `protonvpn/`) — the repo ships the scripts, never the account.
+Client: `net-vpn/proton-vpn-gtk-app` from `guru` (`~amd64`, so a
+`package.accept_keywords` line is needed), plus its Proton Python/Rust deps. The
+app keeps the session in the keyring, so the first sign-in is done once in the
+app; after that the toggle works headless. A NetworkManager VPN profile (an
+imported `.ovpn`) also drives the same toggle.
+
 ## The bar toggle
 
 The bar's session menu (power icon, far right) has:
