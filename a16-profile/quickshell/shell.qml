@@ -66,6 +66,9 @@ ShellRoot {
         // Attached devices: one "kind|a|b|c|d" record each, see devices.sh.
         property var devLines: []
         property int devCount: 0
+        // Proton VPN: "off" or the tunnel/profile name, see statusProc below.
+        property bool vpnOn: false
+        property string vpnName: ""
         property string wxText: "--°F"
         property string wxIcon: "weather-clear-symbolic"
         property string wxDesc: ""
@@ -180,12 +183,14 @@ ShellRoot {
                 "BRI=$(brightnessctl -m 2>/dev/null | awk -F, '{print $4}'); " +
                 "PROF=$(powerprofilesctl get 2>/dev/null | cut -c1-4); " +
                 "MIC=$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null | grep -q MUTED && echo muted || echo live); " +
-                "echo \"${BAT:-AC}% (${STAT:-N/A})|${SSID:-Offline}|${VOL:-0%}|${BRI:-100%}|${PROF:-bal}|${MIC:-live}\""
+                "VPN=$(nmcli -t -f TYPE,NAME con show --active 2>/dev/null | awk -F: '$1 ~ /vpn/ {print $2; exit}'); " +
+                "[ -z \"$VPN\" ] && VPN=$(ip -br link 2>/dev/null | awk '$1 ~ /^(proton|tun|wg)[0-9]+/ {print $1; exit}'); " +
+                "echo \"${BAT:-AC}% (${STAT:-N/A})|${SSID:-Offline}|${VOL:-0%}|${BRI:-100%}|${PROF:-bal}|${MIC:-live}|${VPN:-off}\""
             ]
             stdout: SplitParser {
                 onRead: data => {
                     let parts = data.trim().split("|");
-                    if (parts.length === 6) {
+                    if (parts.length === 7) {
                         bar.batText = "BAT " + parts[0];
                         let pct = parseInt(parts[0], 10);
                         bar.batIcon = isNaN(pct) ? "battery-good-symbolic"
@@ -198,6 +203,8 @@ ShellRoot {
                         bar.briText = "Bri: " + parts[3];
                         bar.profText = parts[4].toUpperCase();
                         bar.micMuted = parts[5] === "muted";
+                        bar.vpnOn = parts[6] !== "off";
+                        bar.vpnName = parts[6];
                     }
                 }
             }
@@ -570,6 +577,39 @@ ShellRoot {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: Quickshell.execDetached(["kitty", "-e", Quickshell.env("HOME") + "/.local/bin/portage-update.sh"])
+                }
+            }
+
+            // Proton VPN: grey shield when down (click connects), green when a
+            // tunnel is up (click disconnects). state comes from statusProc.
+            Rectangle {
+                id: vpnChip
+                Layout.preferredWidth: vpnRow.implicitWidth + 12
+                Layout.fillWidth: false; Layout.fillHeight: false
+                Layout.alignment: Qt.AlignVCenter
+                height: 26; radius: 6
+                color: vpnHover.containsMouse ? "#3a3a3a" : "#303030"
+                border.width: 1; border.color: "#454545"
+                Row {
+                    id: vpnRow
+                    anchors.centerIn: parent
+                    spacing: 6
+                    BarIcon {
+                        iconName: "network-vpn-symbolic"
+                        tint: bar.vpnOn ? "#8ff0a4" : "#77767b"
+                    }
+                    Text {
+                        text: "VPN"
+                        color: bar.vpnOn ? "#8ff0a4" : "#9a9996"
+                        font.pixelSize: 15; font.bold: true
+                    }
+                }
+                MouseArea {
+                    id: vpnHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: Quickshell.execDetached(["bash", "-c",
+                        "bash \"$HOME/.local/bin/protonvpn-toggle.sh\""])
                 }
             }
 
