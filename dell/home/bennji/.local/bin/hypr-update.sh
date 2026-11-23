@@ -6,6 +6,7 @@
 #   hypr-update.sh --dots-only     dotfiles only (no root needed)
 #   hypr-update.sh --system-only   Hyprland packages only
 #   hypr-update.sh --quiet         log to ~/.local/state/hypr-update/last.log
+#   hypr-update.sh --count         print "<system> <dots> <total>" (bar applet)
 #
 # Dotfiles come from the hyprland-setup repo (override with HYPR_DOTS_REPO):
 # cloned or fast-forwarded into ~/.local/share/hyprland-setup, then the profile
@@ -29,17 +30,19 @@ gui-libs/xdg-desktop-portal-hyprland gui-apps/quickshell"
 DO_SYSTEM=1
 DO_DOTS=1
 CHECK=0
+COUNT=0
 QUIET=0
 PROFILE="${HYPR_PROFILE:-auto}"
 
 usage() {
-    sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
     exit "${1:-0}"
 }
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --check)       CHECK=1 ;;
+        --count)       COUNT=1 ;;
         --dots-only)   DO_SYSTEM=0 ;;
         --system-only) DO_DOTS=0 ;;
         --quiet)       QUIET=1 ;;
@@ -57,6 +60,20 @@ if [ "$QUIET" -eq 1 ]; then
 fi
 
 say() { printf '%s\n' "$*"; }
+
+# Machine-readable form for the bar applet: "<system> <dots> <total>".
+# emerge -p needs no root and reads only the local tree, so this is cheap
+# enough to poll every few hours.
+if [ "$COUNT" -eq 1 ]; then
+    # shellcheck disable=SC2086  # ATOMS is a deliberate word list
+    SYS=$(emerge -p -u --changed-use --noreplace $ATOMS 2>/dev/null | grep -c '^\[' || true)
+    DOTS=0
+    if [ -d "$DIR/.git" ] && git -C "$DIR" fetch --quiet origin 2>/dev/null; then
+        DOTS=$(git -C "$DIR" rev-list --count 'HEAD..@{u}' 2>/dev/null || echo 0)
+    fi
+    printf '%s %s %s\n' "${SYS:-0}" "${DOTS:-0}" "$(( ${SYS:-0} + ${DOTS:-0} ))"
+    exit 0
+fi
 
 # --------------------------------------------------------------------- profile
 if [ "$PROFILE" = auto ]; then

@@ -69,6 +69,8 @@ ShellRoot {
         // Proton VPN: "off" or the tunnel/profile name, see statusProc below.
         property bool vpnOn: false
         property string vpnName: ""
+        // Hyprland updater applet: -1 until the first check comes back.
+        property int updCount: -1
         property string wxText: "--°F"
         property string wxIcon: "weather-clear-symbolic"
         property string wxDesc: ""
@@ -228,6 +230,26 @@ ShellRoot {
 
         // wttr.in is polled every 15 minutes: conditions do not change faster
         // than that, and each call is a real HTTP request.
+        // Hyprland + dotfiles updater: the chip opens the same script the
+        // session menu runs; this poll only counts what is behind.
+        Process {
+            id: updCheck
+            command: ["bash", "-c", "bash \"$HOME/.local/bin/hypr-update.sh\" --count"]
+            stdout: SplitParser {
+                onRead: data => {
+                    let parts = data.trim().split(" ");
+                    if (parts.length === 3) {
+                        let n = parseInt(parts[2], 10);
+                        if (!isNaN(n)) bar.updCount = n;
+                    }
+                }
+            }
+        }
+        Timer {
+            interval: 21600000; running: true; repeat: true; triggeredOnStart: true
+            onTriggered: updCheck.running = true
+        }
+
         Timer {
             interval: 900000; running: true; repeat: true; triggeredOnStart: true
             onTriggered: weatherProc.running = true
@@ -557,6 +579,41 @@ ShellRoot {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/gpu-switch.sh"])
+                }
+            }
+
+            // Hyprland updater: the number is how many Hyprland atoms and
+            // dotfile commits are behind; click opens it in kitty.
+            Rectangle {
+                id: hyprUpdChip
+                Layout.preferredWidth: hyprUpdRow.implicitWidth + 12
+                Layout.fillWidth: false; Layout.fillHeight: false
+                Layout.alignment: Qt.AlignVCenter
+                height: 26; radius: 6
+                color: hyprUpdHover.containsMouse ? "#3a3a3a" : "#303030"
+                border.width: 1; border.color: "#454545"
+                Row {
+                    id: hyprUpdRow
+                    anchors.centerIn: parent
+                    spacing: 6
+                    BarIcon {
+                        iconName: "software-update-available-symbolic"
+                        tint: bar.updCount > 0 ? "#f9c440" : "#77767b"
+                    }
+                    Text {
+                        text: bar.updCount < 0 ? "Hypr …"
+                            : bar.updCount > 0 ? "Hypr " + bar.updCount
+                            : "Hypr OK"
+                        color: bar.updCount > 0 ? "#f9c440" : "#9a9996"
+                        font.pixelSize: 15; font.bold: true
+                    }
+                }
+                MouseArea {
+                    id: hyprUpdHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: Quickshell.execDetached(["kitty", "-e",
+                        Quickshell.env("HOME") + "/.local/bin/hypr-update.sh"])
                 }
             }
 
