@@ -1,0 +1,52 @@
+#!/bin/sh
+# LightDM Wayland session entry for Hyprland.
+#
+# 1) Wait until logind reports the session as Active, otherwise libseat forces
+#    Hyprland to enumerate input devices while the session is still inactive
+#    and they never get registered.
+if [ -n "$XDG_SESSION_ID" ]; then
+    for _ in $(seq 1 50); do
+        [ "$(loginctl show-session "$XDG_SESSION_ID" -p Active --value 2>/dev/null)" = "yes" ] && break
+        sleep 0.2
+    done
+fi
+
+# 2) Make sure a usable D-Bus session bus exists, at the conventional per-user
+#    socket path so dconf/gsettings, xdg-desktop-portal, wpctl and nmcli all
+#    find the same bus. A dead DBUS_SESSION_BUS_ADDRESS makes those tools fail
+#    with "Could not connect: No such file or directory".
+bus_ok() {
+    [ -n "$DBUS_SESSION_BUS_ADDRESS" ] || return 1
+    case "$DBUS_SESSION_BUS_ADDRESS" in
+        unix:path=*)
+            local p="${DBUS_SESSION_BUS_ADDRESS#unix:path=}"
+            p="${p%%,*}"
+            [ -S "$p" ]
+            ;;
+        *) return 0 ;;
+    esac
+}
+
+start_user_bus() {
+    [ -n "$XDG_RUNTIME_DIR" ] && [ -d "$XDG_RUNTIME_DIR" ] || return 1
+    [ -S "$XDG_RUNTIME_DIR/bus" ] && { export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"; return 0; }
+    rm -f "$XDG_RUNTIME_DIR/bus"
+    dbus-daemon --session --fork --nopidfile \
+        --address="unix:path=$XDG_RUNTIME_DIR/bus" --print-address=1 >/dev/null 2>&1
+    [ -S "$XDG_RUNTIME_DIR/bus" ] || return 1
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+    return 0
+}
+
+if ! bus_ok; then
+    if ! start_user_bus; then
+        unset DBUS_SESSION_BUS_ADDRESS
+        exec dbus-run-session -- /usr/bin/start-hyprland "$@"
+    fi
+fi
+
+# 3) Go through start-hyprland, not the Hyprland binary. Hyprland warns and
+#    loses its watchdog/session setup when launched directly:
+#      WARNING: Hyprland is being launched without start-hyprland.
+#    The launcher sets the env Hyprland expects and hands it a watchdog fd.
+exec /usr/bin/start-hyprland "$@"

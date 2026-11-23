@@ -1,0 +1,5 @@
+# GNOME Software on this image is a Flatpak app store.  The tree has no
+# app-admin/packagekit at all, so there is no PackageKit/Portage backend to
+# build; the PyQt package manager remains the Portage UI.
+# -firmware keeps fwupd (and its systemd-leaning stack) out of the live image.
+gnome-extra/gnome-software sysprof flatpak -firmware

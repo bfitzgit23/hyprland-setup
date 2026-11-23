@@ -1,0 +1,12 @@
+# Install to /etc/portage/package.use/cmus
+#
+# Every flag here is in media-sound/cmus-2.12.0's IUSE. `wma` and
+# `zsh-completion` are NOT cmus flags (WMA goes through ffmpeg; the zsh
+# completion ships as a contrib script), so they must not be listed here or
+# Portage warns on every emerge.
+#
+# pulseaudio is added deliberately: cmus needs an output that reaches
+# wireplumber, otherwise it only has ALSA/OSS.
+# elogind is what gives cmus its MPRIS interface, which is how the bar's
+# now-playing chip sees it without the cmus-remote fallback.
+media-sound/cmus aac cddb cdio discid elogind ffmpeg mp4 musepack pidgin pulseaudio

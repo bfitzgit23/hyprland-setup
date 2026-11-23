@@ -1,0 +1,13 @@
+# dev-libs/nettle: keep the live image runnable on any x86-64 CPU.
+#
+# CPU_FLAGS_X86="aes sha ..." in config/stages/make.conf matches a modern build
+# host, and nettle's ebuild turns those into --enable-x86-aesni /
+# --enable-x86-sha-ni.  That is not runtime dispatch: it compiles the AES-NI
+# code *into* nettle_aes*_encrypt itself, so libnettle then needs AES-NI
+# unconditionally.  On a CPU without it (VMs using QEMU's default qemu64 model,
+# pre-2010 hardware) every GnuTLS consumer dies with SIGILL, e.g.
+#   traps: xfce4-terminal[4260] trap invalid opcode ... in libnettle.so.8.11
+# which surfaces as "Failed to execute default Terminal Emulator. Input/output
+# error." on Ctrl+Alt+T.  The live ISO is meant to boot anywhere, so build the
+# portable generic implementations; the speed difference is irrelevant here.
+dev-libs/nettle -cpu_flags_x86_aes -cpu_flags_x86_sha

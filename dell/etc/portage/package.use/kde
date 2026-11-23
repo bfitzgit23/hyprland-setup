@@ -1,0 +1,11 @@
+kde-apps/kde-apps-meta pim -education -games
+
+
+#for kde-apps/kdenlive
+media-video/ffmpeg libass
+
+#for kde-misc/kweather
+dev-qt/qtpositioning geoclue
+
+#for kde-apps/akonadi
+dev-qt/qtbase mysql

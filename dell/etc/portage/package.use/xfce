@@ -1,0 +1,8 @@
+xfce-base/xfce4-meta -calendar -cdr -mpd -remote-fs archive upower -image -media -pulseaudio
+# required by @selected
+# required by @world (argument)
+# required by @selected
+# required by @world (argument)
+# required by gui-apps/quickshell-9999::guru[crash-handler]
+# required by gui-apps/quickshell (argument)
+>=dev-cpp/cpptrace-1.0.4-r1 unwind

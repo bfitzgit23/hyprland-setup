@@ -1,0 +1,29 @@
+// Let desktop users in group wheel suspend, hibernate, reboot and power off
+// without an authentication prompt.
+//
+// Why this is needed here: LightDM registers the Hyprland session against tty2
+// while the foreground VT is tty8, so elogind reports session Active=no. The
+// stock policy for org.freedesktop.login1.suspend is allow_active=yes,
+// allow_inactive=auth_admin_keep, so an inactive session is asked to
+// authenticate. A button in the bar has no way to answer that prompt, and
+// loginctl exits with an authentication error -- the button appears to do
+// nothing at all (no suspend attempt ever reaches the kernel).
+//
+// Single-user desktop, so the blanket permission is appropriate. Delete this
+// file to restore the stock prompts.
+polkit.addRule(function (action, subject) {
+    var powerActions = [
+        "org.freedesktop.login1.suspend",
+        "org.freedesktop.login1.suspend-multiple-sessions",
+        "org.freedesktop.login1.hibernate",
+        "org.freedesktop.login1.hibernate-multiple-sessions",
+        "org.freedesktop.login1.power-off",
+        "org.freedesktop.login1.power-off-multiple-sessions",
+        "org.freedesktop.login1.reboot",
+        "org.freedesktop.login1.reboot-multiple-sessions"
+    ];
+
+    if (subject.isInGroup("wheel") && powerActions.indexOf(action.id) !== -1) {
+        return polkit.Result.YES;
+    }
+});

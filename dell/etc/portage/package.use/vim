@@ -1,0 +1,22 @@
+app-editors/vim lua luajit perl python ruby terminal vim-pager
+# required by sys-boot/os-prober-1.81::gentoo
+# required by os-prober (argument)
+>=sys-boot/grub-2.06-r7 mount
+# required by xfce-base/xfce4-panel-4.18.4::gentoo[dbusmenu]
+# required by xfce-base/xfce4-power-manager-4.18.2::gentoo[panel-plugin]
+# required by xfce-base/xfce4-meta-4.18::gentoo[upower]
+# required by xfce4-meta (argument)
+>=dev-libs/libdbusmenu-16.04.0-r2 gtk3
+# required by www-client/chromium-116.0.5845.140::gentoo
+# required by chromium (argument)
+>=sys-libs/zlib-1.2.13-r1 minizip
+# required by www-client/chromium-116.0.5845.140::gentoo
+# required by chromium (argument)
+>=net-libs/nodejs-20.5.1 inspector
+# required by sys-power/apcupsd-3.14.14-r3::gentoo
+# required by app-admin/conky-1.19.2-r1::gentoo[apcupsd]
+# required by conky (argument)
+>=sys-apps/util-linux-2.38.1-r2 tty-helpers
+# required by dev-util/catalyst-9999::gentoo[iso]
+# required by catalyst (argument)
+>=sys-boot/grub-2.06-r7 grub_platforms_efi-32

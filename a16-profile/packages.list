@@ -1,0 +1,25 @@
+# Atoms installed by ./restore.sh a16 --packages (emerge --noreplace).
+# One per line; comments and blanks are ignored.
+gui-wm/hyprland
+gui-apps/quickshell
+gui-apps/hypridle
+gui-apps/swww
+gui-apps/wl-clipboard
+gui-apps/mako
+x11-misc/grim
+x11-misc/slurp
+x11-misc/swappy
+x11-misc/rofi
+x11-misc/brightnessctl
+media-sound/pipewire
+media-video/wireplumber
+media-sound/cmus
+sys-fs/udisks
+net-misc/networkmanager
+sys-auth/fprintd
+x11-terms/kitty
+# device widget (phone over USB)
+dev-util/android-tools
+app-pda/libimobiledevice
+# remote support; needs the `local` overlay with the rustdesk-bin ebuild
+net-misc/rustdesk

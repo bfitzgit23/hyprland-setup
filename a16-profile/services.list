@@ -1,0 +1,9 @@
+# OpenRC services to enable on the A16. Elogind and dbus-dist are pulled in by
+# the desktop stack; NetworkManager and display-manager are what actually start
+# the session.
+dbus
+elogind
+NetworkManager
+bluetooth
+display-manager
+rustdesk

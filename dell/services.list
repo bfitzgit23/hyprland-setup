@@ -1,0 +1,17 @@
+# OpenRC services in the Dell's default runlevel, as of the snapshot
+# (ls /etc/runlevels/default on 2026-11-22). ./restore.sh dell enables these.
+# autoconfig and fixinittab are OpenRC internals and are left out on purpose.
+NetworkManager
+acpid
+bluetooth
+chronyd
+cupsd
+dbus
+display-manager
+gpm
+local
+rustdesk
+sshd
+syslog-ng
+teamviewerd
+xdm

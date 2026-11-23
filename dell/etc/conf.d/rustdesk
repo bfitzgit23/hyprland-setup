@@ -1,0 +1,7 @@
+# The daemon spawns the per-user server with
+#   sudo -E XDG_RUNTIME_DIR=/run/user/1001 -u bennji rustdesk --server
+# sudo -E preserves this file's environment, so these two values reach that
+# child. Without WAYLAND_DISPLAY rustdesk picks the X11 clipboard backend,
+# which Hyprland does not forward, and input degrades.
+export WAYLAND_DISPLAY=wayland-1
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus

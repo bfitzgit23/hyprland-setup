@@ -1,0 +1,9 @@
+# The live image is squashed with xz (catalyst/gensquashfs default).  Gentoo's
+# squashfs-tools only enables gzip unless asked, and Calamares' unpackfs runs
+# `unsquashfs -l` on the image to count files before installing.  With a
+# gzip-only unsquashfs that call exits 1 ("Filesystem uses xz compression, this
+# is unsupported by this version"), which Calamares reports as
+# "Boost.Python error in job unpackfs" and the install cannot start.
+# Keep every compressor the ISO tooling may produce.  There is no "xz" flag:
+# xz decompression comes from lzma (liblzma).
+sys-fs/squashfs-tools lzma lz4 lzo zstd

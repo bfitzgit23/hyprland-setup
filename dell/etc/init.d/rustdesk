@@ -1,0 +1,24 @@
+#!/sbin/openrc-run
+# OpenRC service for RustDesk unattended access.
+# The ebuild ships no unit, so this mirrors what the upstream .deb's
+# systemd unit does: a root daemon running `rustdesk --service`.
+
+description="RustDesk remote desktop service (unattended access)"
+
+command="/usr/bin/rustdesk"
+command_args="--service"
+command_user="root:root"
+command_background="no"
+supervisor="supervise-daemon"
+respawn_delay=5
+respawn_max=0
+
+: ${rustdesk_log:=/var/log/rustdesk.log}
+output_log="${rustdesk_log}"
+error_log="${rustdesk_log}"
+
+depend() {
+	need net localmount
+	use dbus logger
+	after display-manager
+}

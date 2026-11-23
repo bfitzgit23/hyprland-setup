@@ -1,0 +1,10 @@
+media-libs/mesa abi_x86_32 vulkan vaapi zstd
+media-libs/vulkan-loader abi_x86_32
+x11-libs/libdrm abi_x86_32
+media-video/pipewire abi_x86_32 sound-server pipewire-alsa
+sys-libs/zlib abi_x86_32
+dev-libs/libffi abi_x86_32
+app-emulation/wine-staging -wow64 abi_x86_32 abi_x86_64 vulkan wayland
+games-util/steam-launcher ~amd64
+app-emulation/wine-vanilla -wow64 abi_x86_32 abi_x86_64 vulkan wayland
+app-emulation/wine-proton -wow64 abi_x86_32 abi_x86_64 vulkan wayland
