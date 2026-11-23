@@ -698,6 +698,7 @@ ShellRoot {
                                 model: [
                                     { label: "Lock screen", cmd: "loginctl lock-session" },
                                     { label: "Suspend", cmd: "loginctl lock-session; sleep 1; loginctl suspend" },
+                                    { label: "Update Hyprland + dots", cmd: "exec kitty -e $HOME/.local/bin/hypr-update.sh" },
                                     { label: "Log out", cmd: "loginctl terminate-user bennji" },
                                     { label: "Reboot", cmd: "loginctl reboot" },
                                     { label: "Shut down", cmd: "loginctl poweroff" }
@@ -723,6 +724,57 @@ ShellRoot {
                                             sessionMenu.visible = false
                                             Quickshell.execDetached(["bash", "-c", sessionRow.modelData.cmd])
                                         }
+                                    }
+                                }
+                            }
+
+                            // Updater toggle: the marker file makes the autostart
+                            // hook in hyprland.lua pull the dotfiles at login.
+                            Process {
+                                id: autoMarkerCheck
+                                command: ["bash", "-c",
+                                    "test -e \"$HOME/.config/hypr/autoupdate\" && echo on || echo off"]
+                                stdout: SplitParser {
+                                    onRead: data => { autoUpdateRow.on = data.trim() === "on"; }
+                                }
+                            }
+                            Rectangle {
+                                id: autoUpdateRow
+                                property bool on: false
+                                width: sessionMenu.implicitWidth - 20
+                                height: 28; radius: 4
+                                color: autoUpdateHover.containsMouse ? "#3a3a3a" : "transparent"
+                                Component.onCompleted: autoMarkerCheck.running = true
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Auto-update on login"
+                                    color: "#deddda"; font.pixelSize: 15; font.bold: true
+                                }
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 8
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 30; height: 16; radius: 8
+                                    color: autoUpdateRow.on ? "#3584e4" : "#4a4a4a"
+                                    Rectangle {
+                                        width: 12; height: 12; radius: 6
+                                        color: "#deddda"
+                                        y: 2; x: autoUpdateRow.on ? 16 : 2
+                                        Behavior on x { NumberAnimation { duration: 90 } }
+                                    }
+                                }
+                                MouseArea {
+                                    id: autoUpdateHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        let next = !autoUpdateRow.on;
+                                        autoUpdateRow.on = next;
+                                        Quickshell.execDetached(["bash", "-c",
+                                            "M=$HOME/.config/hypr/autoupdate; " +
+                                            (next ? "mkdir -p $(dirname $M); : > $M" : "rm -f $M")]);
                                     }
                                 }
                             }

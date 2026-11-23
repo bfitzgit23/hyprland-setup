@@ -141,4 +141,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("nm-applet --indicator")
     hl.exec_cmd("blueman-applet")
     hl.exec_cmd("~/.local/bin/wallpaper-rotate.sh")
+    -- Optional dotfiles pull at login, toggled from the bar's session menu
+    -- (the toggle just creates or removes ~/.config/hypr/autoupdate).
+    hl.exec_cmd("[ -e ~/.config/hypr/autoupdate ] && ~/.local/bin/hypr-update.sh --dots-only --quiet")
 end)
