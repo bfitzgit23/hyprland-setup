@@ -15,7 +15,14 @@ hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
 hl.env("GTK_THEME", "adw-gtk3-dark")
 
 -------------- MONITORS --------------
+-- The internal panel comes up as eDP-1 when the Intel GPU drives it and as
+-- eDP-2 when the dGPU does (gpu-switch.sh flips between the two). Only eDP-1
+-- used to be pinned, so on eDP-2 the catch-all rule below applied and its
+-- "auto" scale resolved to 1.5 on this 1080p 15.6" panel: huge UI text and
+-- XWayland windows upscaled/blurry. Pin both names to 1.
 hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1 })
+hl.monitor({ output = "eDP-2", mode = "preferred", position = "auto", scale = 1 })
+-- Anything else (docked displays) keeps the density-based scale.
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 
 -------------- LOOK AND FEEL --------------
