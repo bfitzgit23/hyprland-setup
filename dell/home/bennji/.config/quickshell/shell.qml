@@ -74,6 +74,8 @@ ShellRoot {
         property string wxText: "--°F"
         property string wxIcon: "weather-clear-symbolic"
         property string wxDesc: ""
+        // Set once wttr.in has answered; wxTimer retries quickly until then.
+        property bool wxLoaded: false
 
         // wttr.in reports a WWO weather code; fold it onto the Adwaita symbolic
         // set the bar already uses, so the chip stays monochrome-tinted.
@@ -224,6 +226,7 @@ ShellRoot {
                     bar.wxText = parts[1] + "°F";
                     bar.wxIcon = bar.wxIconFor(parseInt(parts[0], 10));
                     bar.wxDesc = parts.length > 2 ? parts[2] : "";
+                    bar.wxLoaded = true;
                 }
             }
         }
@@ -250,8 +253,15 @@ ShellRoot {
             onTriggered: updCheck.running = true
         }
 
+        // The chip only fills in when wttr.in answers. The bar starts with the
+        // session, but NetworkManager brings the link up a moment later, so the
+        // first fetch fails and the chip sat on its placeholder for a quarter of
+        // an hour. Retry every minute until the first answer lands, then keep the
+        // 15 minute cadence (conditions do not change faster than that).
         Timer {
-            interval: 900000; running: true; repeat: true; triggeredOnStart: true
+            id: wxTimer
+            interval: bar.wxLoaded ? 900000 : 60000
+            running: true; repeat: true; triggeredOnStart: true
             onTriggered: weatherProc.running = true
         }
 
@@ -898,6 +908,17 @@ ShellRoot {
                         // alone. Until it answers, render as colour.
                         property bool monoIcon: false
                         property string iconPath: ""
+                        // The item republishes its themed name as its state
+                        // changes: nm-applet walks nm-stage02-connecting03 while
+                        // the link comes up and then switches to nm-signal-75.
+                        // Probing only at creation froze the tray on whichever
+                        // glyph existed at login -- the connecting one, forever,
+                        // even after the bar itself said connected.
+                        property string iconName: String(modelData.icon)
+                        onIconNameChanged: {
+                            trayEntry.iconPath = "";
+                            iconProbe.running = true;
+                        }
                         Component.onCompleted: iconProbe.running = true
                         Process {
                             id: iconProbe
