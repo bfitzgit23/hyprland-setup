@@ -4,6 +4,12 @@
 # it is re-read between ticks so a pick applies without restarting this loop.
 BG_DIR="/usr/share/backgrounds"
 INTERVAL=900
+# The panel is 1920x1080 and swww fills the screen by magnifying the image, so a
+# 4:3 file from the gentoo10 tree (it ships 800x600, 1024x768, 1366x768, ...)
+# lands on screen hugely upscaled and blurry. Shuffle only wallpapers that are
+# at least as big as the screen; anything larger is centre-cropped to fit.
+SCREEN_W=1920
+SCREEN_H=1080
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}"
 PIN="$STATE/wallpaper-pin"
 CURRENT="$STATE/wallpaper-current"
@@ -14,6 +20,19 @@ sleep 1
 
 current() { cat "$CURRENT" 2>/dev/null; }
 
+big_enough() {
+    python3 - "$1" "$SCREEN_W" "$SCREEN_H" <<'PY'
+import sys
+try:
+    from PIL import Image
+    with Image.open(sys.argv[1]) as im:
+        w, h = im.size
+except Exception:
+    sys.exit(1)
+sys.exit(0 if w >= int(sys.argv[2]) and h >= int(sys.argv[3]) else 1)
+PY
+}
+
 apply() {
     [ "$1" = "$(current)" ] && return
     swww img "$1" --transition-type fade --transition-duration 2 >/dev/null 2>&1
@@ -23,7 +42,9 @@ apply() {
 random_image() {
     find "$BG_DIR" -type f \
         \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
-        2>/dev/null | shuf -n 1
+        2>/dev/null | shuf | while IFS= read -r f; do
+            big_enough "$f" && { printf '%s\n' "$f"; break; }
+        done
 }
 
 while true; do

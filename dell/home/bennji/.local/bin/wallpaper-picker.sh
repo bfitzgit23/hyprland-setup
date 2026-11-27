@@ -11,6 +11,22 @@ CURRENT="$STATE/wallpaper-current"
 UNPIN_ICON="/usr/share/icons/Adwaita/symbolic/actions/view-refresh-symbolic.svg"
 mkdir -p "$STATE" /tmp
 
+# A wallpaper has to be at least as big as the 1920x1080 panel: swww fills the
+# screen by magnifying the image, so the small files in the gentoo10 tree show
+# up hugely upscaled. Same rule as wallpaper-rotate.sh.
+big_enough() {
+    python3 - "$1" 1920 1080 <<'PY'
+import sys
+try:
+    from PIL import Image
+    with Image.open(sys.argv[1]) as im:
+        w, h = im.size
+except Exception:
+    sys.exit(1)
+sys.exit(0 if w >= int(sys.argv[2]) and h >= int(sys.argv[3]) else 1)
+PY
+}
+
 mapfile -t FILES < <(
     find /usr/share/backgrounds "$HOME/Pictures" -maxdepth 3 -type f \
         \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
@@ -24,6 +40,17 @@ fi
 
 pinned=""
 [ -s "$PIN" ] && pinned=$(head -n1 "$PIN")
+
+# Offer only wallpapers big enough to fill the 1080p panel without being blown
+# up; the pinned image is always kept so a choice never disappears from the
+# list.
+KEEP=()
+for f in "${FILES[@]}"; do
+    if [ "$f" = "$pinned" ] || big_enough "$f"; then
+        KEEP+=("$f")
+    fi
+done
+FILES=("${KEEP[@]}")
 
 rows() {
     local label="↻  Resume auto-rotation"
@@ -54,7 +81,9 @@ if [ "$pick" -eq 0 ]; then
     # on screen until the rotation loop's next 15 minute tick.
     next=$(find /usr/share/backgrounds -type f \
         \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
-        2>/dev/null | shuf -n1)
+        2>/dev/null | shuf | while IFS= read -r f; do
+            big_enough "$f" && { printf '%s\n' "$f"; break; }
+        done)
     [ -n "$next" ] && apply "$next"
     exit 0
 fi
